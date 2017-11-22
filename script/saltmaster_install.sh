@@ -21,7 +21,7 @@ export CLUSTER_NAME=$cluster_name
 export HOSTNAME=$node_hostname
 export DOMAIN=$node_domain
 export DISTRIB_REVISION=$formula_pkg_revision
-
+export EXTRA_FORMULAS=$extra_formulas
 # set with default's if not provided at all
 export RECLASS_BRANCH=${RECLASS_BRANCH:-master}
 export RECLASS_ROOT=${RECLASS_ROOT:-/srv/salt/reclass}
