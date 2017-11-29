@@ -74,7 +74,7 @@ parameters:
     default: ubuntu-14-04-x64-mcp1.1
 resources:
   mcp_network:
-    type: MCP::Network
+    type: MCP::NetworkRT
     properties:
       stack_name: { get_param: "OS::stack_name" }
       key_value: { get_param: cluster_public_key }
@@ -213,7 +213,7 @@ resources:
         - [ { get_param: "OS::stack_name" }, { get_param: cluster_domain } ]
       instance_cluster: { get_param: cluster_name }
       instance_zone: { get_param: cluster_zone }
-      instance_image: vsrx-12.1X46-D20.5-new
+      instance_image: vsrx-12.1X46-D20.5-new-static-to-cfg
       instance_flavor: oc_vsrx
       instance_cloud_init: |
         # todo

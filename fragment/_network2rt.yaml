@@ -1,0 +1,128 @@
+heat_template_version: 2015-10-15
+
+description: Network fragment
+
+parameters:
+  stack_name:
+    type: string
+  key_value:
+    type: string
+  public_net:
+    type: string
+    description: ID or name of public network for which router will be allocated.
+  nameservers:
+    type: comma_delimited_list
+  network01_cidr:
+    type: string
+    description: Private network address (CIDR notation)
+    default: 192.168.10.0/24
+  network01_pool_start:
+    type: string
+    description: Start of private network IP address allocation pool
+    default: 192.168.10.90
+  network01_pool_end:
+    type: string
+    description: End of private network IP address allocation pool
+    default: 192.168.10.200
+  network02_cidr:
+    type: string
+    description: Private network address (CIDR notation)
+    default: 172.16.10.0/24
+  network02_pool_start:
+    type: string
+    description: Start of private network IP address allocation pool
+    default: 172.16.10.90
+  network02_pool_end:
+    type: string
+    description: End of private network IP address allocation pool
+    default: 172.16.10.200
+  fip_pool_cidr:
+    type: string
+    description: FIP pool network address (CIDR notation)
+    default: 172.16.111.0/24
+  fip_pool_nh:
+    type: string
+    description: FIP address pool should be available through this next hop
+    default: 192.168.10.131
+
+resources:
+  key_pair:
+    type: OS::Nova::KeyPair
+    properties:
+      name: { get_param: stack_name }
+      public_key: { get_param: key_value }
+      save_private_key: false
+  route_table:
+    type: OS::ContrailV2::RouteTable
+    properties:
+      name:  { list_join: ['-', [get_param: stack_name, 'rt_net01']] }
+      routes:
+        routes_route:
+        - routes_route_prefix: { get_param: fip_pool_cidr }
+          routes_route_next_hop: { get_param: fip_pool_nh }
+
+  network01:
+    type: OS::ContrailV2::VirtualNetwork
+    properties:
+      name: { list_join: ['-', [get_param: stack_name, 'net01']] }
+      route_table_refs:
+      - get_resource: route_table
+
+  subnet01:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { list_join: ['-', [get_param: stack_name, 'net01']] }
+      network: { get_resource: network01 }
+      cidr: { get_param: network01_cidr }
+      dns_nameservers: { get_param: nameservers }
+      allocation_pools:
+        - start: { get_param: network01_pool_start }
+          end: { get_param: network01_pool_end }
+  network02:
+    type: OS::Neutron::Net
+    properties:
+      name: { list_join: ['-', [get_param: stack_name, 'net02']] }
+  subnet02:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { list_join: ['-', [get_param: stack_name, 'net02']] }
+      network: { get_resource: network02 }
+      cidr: { get_param: network02_cidr }
+      gateway_ip: null
+      dns_nameservers: { get_param: nameservers }
+      allocation_pools:
+        - start: { get_param: network02_pool_start }
+          end: { get_param: network02_pool_end }
+  security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { get_param: stack_name }
+      description: Security group
+      rules:
+        - protocol: tcp
+          remote_ip_prefix: 0.0.0.0/0
+        - protocol: udp
+          remote_ip_prefix: 0.0.0.0/0
+        - protocol: icmp
+          remote_ip_prefix: 0.0.0.0/0
+outputs:
+  network:
+    value: { get_param: stack_name }
+  security_group:
+    value: { get_param: stack_name }
+  network01_subnet:
+    value: { get_resource: subnet01 }
+  network01_prefix:
+    value:
+      list_join:
+        - '.'
+        - - str_split: ['.', { get_param: network01_cidr }, 0]
+          - str_split: ['.', { get_param: network01_cidr }, 1]
+          - str_split: ['.', { get_param: network01_cidr }, 2]
+  network02_prefix:
+    value:
+      list_join:
+        - '.'
+        - - str_split: ['.', { get_param: network02_cidr }, 0]
+          - str_split: ['.', { get_param: network02_cidr }, 1]
+          - str_split: ['.', { get_param: network02_cidr }, 2]
