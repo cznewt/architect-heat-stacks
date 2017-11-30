@@ -12,7 +12,7 @@ parameters:
     default: nova
   cluster_name:
     type: string
-    default: os_ha_contrail_ironic
+    default: os-ha-contrail-ironic
   cluster_domain:
     type: string
   cluster_nameservers:
@@ -174,8 +174,8 @@ resources:
       instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
       instance_cloud_init: |
         # todo
-  mcp_os_compute:
-    type: MCP::StaticCluster
+  mcp_bmt:
+    type: MCP::SingleInstance
     depends_on: mcp_oc_control
     properties:
       key_pair: { get_param: "OS::stack_name" }
@@ -183,8 +183,7 @@ resources:
       security_group: { get_attr: [mcp_network, security_group] }
       network01_prefix: { get_attr: [mcp_network, network01_prefix] }
       network02_prefix: { get_attr: [mcp_network, network02_prefix] }
-      instance_name: cmp
-      instance_count: { get_param: cluster_node_count }
+      instance_name: bmt0
       instance_domain:
         list_join:
         - '.'
@@ -199,7 +198,7 @@ resources:
         # todo
   mcp_tsn:
     type: MCP::StaticCluster
-    depends_on: mcp_os_control
+    depends_on: mcp_bmt
     properties:
       key_pair: { get_param: "OS::stack_name" }
       network: { get_attr: [mcp_network, network] }
@@ -207,29 +206,7 @@ resources:
       network01_prefix: { get_attr: [mcp_network, network01_prefix] }
       network02_prefix: { get_attr: [mcp_network, network02_prefix] }
       instance_name: tsn
-      instance_count: 2
-      instance_domain:
-        list_join:
-        - '.'
-        - [ { get_param: "OS::stack_name" }, { get_param: cluster_domain } ]
-      instance_cluster: { get_param: cluster_name }
-      instance_zone: { get_param: cluster_zone }
-      instance_os: xenial
-      instance_image: ubuntu-16-04-amd64-cloudimg
-      instance_flavor: os_cmp_small
-      instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
-      instance_cloud_init: |
-        # todo
-  mcp_bmt:
-    type: MCP::SingleInstance
-    depends_on: mcp_os_control
-    properties:
-      key_pair: { get_param: "OS::stack_name" }
-      network: { get_attr: [mcp_network, network] }
-      security_group: { get_attr: [mcp_network, security_group] }
-      network01_prefix: { get_attr: [mcp_network, network01_prefix] }
-      network02_prefix: { get_attr: [mcp_network, network02_prefix] }
-      instance_name: bmt
+      instance_count: 1
       instance_domain:
         list_join:
         - '.'
