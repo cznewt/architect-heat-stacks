@@ -62,8 +62,8 @@ Parameters:
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
 Mappings:
   AWSRegion2AMI:
-    eu-west-2:
-      image: ami-f1d7c395
+    eu-central-1:
+      image: ami-df8406b0
     us-west-1:
       image: ami-2afbde4a
     us-west-2:
