@@ -12,7 +12,7 @@ parameters:
     default: nova
   cluster_name:
     type: string
-    default: ceph-ha
+    default: os-ha-ovs-ceph
   cluster_domain:
     type: string
   cluster_nameservers:
@@ -69,14 +69,14 @@ parameters:
 
 resources:
   mcp_network:
-    type: MCP::Network
+    type: MCP::Network5
     properties:
       stack_name: { get_param: "OS::stack_name" }
       key_value: { get_param: cluster_public_key }
       public_net: { get_param: cluster_public_net }
       nameservers: { get_param: cluster_nameservers }
   mcp_salt_master:
-    type: MCP::SingleInstance
+    type: MCP::SingleInstance5
     depends_on: mcp_network
     properties:
       key_pair: { get_param: "OS::stack_name" }
@@ -84,6 +84,9 @@ resources:
       security_group: { get_attr: [mcp_network, security_group] }
       network01_prefix: { get_attr: [mcp_network, network01_prefix] }
       network02_prefix: { get_attr: [mcp_network, network02_prefix] }
+      network03_prefix: { get_attr: [mcp_network, network03_prefix] }
+      network04_prefix: { get_attr: [mcp_network, network04_prefix] }
+      network05_prefix: { get_attr: [mcp_network, network05_prefix] }
       instance_name: cfg01
       instance_domain:
         list_join:
@@ -95,7 +98,6 @@ resources:
       instance_image: ubuntu-16-04-amd64-cloudimg
       instance_flavor: cfg_salt_small-1
       instance_config_host: 127.0.0.1
-      instance_boot_timeout: 600
       instance_cloud_init:
         str_replace:
           template: { get_file: ../script/saltmaster_install.sh }
@@ -108,10 +110,89 @@ resources:
               - [ { get_param: "OS::stack_name" }, { get_param: cluster_domain } ]
             $network01_prefix: { get_attr: [mcp_network, network01_prefix] }
             $network02_prefix: { get_attr: [mcp_network, network02_prefix] }
+            $network03_prefix: { get_attr: [mcp_network, network03_prefix] }
+            $network04_prefix: { get_attr: [mcp_network, network04_prefix] }
+            $network05_prefix: { get_attr: [mcp_network, network05_prefix] }
             $private_key: { get_param: cfg_reclass_key }
             $reclass_address: { get_param: cfg_reclass_address }
             $reclass_branch: { get_param: cfg_reclass_branch }
             $formula_pkg_revision: { get_param: cfg_formula_pkg_revision }
+  mcp_os_control:
+    type: MCP::SingleInstance5
+    depends_on: mcp_salt_master
+    properties:
+      key_pair: { get_param: "OS::stack_name" }
+      network: { get_attr: [mcp_network, network] }
+      security_group: { get_attr: [mcp_network, security_group] }
+      network01_prefix: { get_attr: [mcp_network, network01_prefix] }
+      network02_prefix: { get_attr: [mcp_network, network02_prefix] }
+      network03_prefix: { get_attr: [mcp_network, network03_prefix] }
+      network04_prefix: { get_attr: [mcp_network, network04_prefix] }
+      network05_prefix: { get_attr: [mcp_network, network05_prefix] }
+      instance_name: ctl01
+      instance_domain:
+        list_join:
+        - '.'
+        - [ { get_param: "OS::stack_name" }, { get_param: cluster_domain } ]
+      instance_cluster: { get_param: cluster_name }
+      instance_zone: { get_param: cluster_zone }
+      instance_os: xenial
+      instance_image: ubuntu-16-04-amd64-cloudimg
+      instance_flavor: os_aio_ctl
+      instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
+      instance_cloud_init: |
+        salt-call event.send 'salt/system/orchestrate'
+  mcp_os_gateway:
+    type: MCP::SingleInstance5
+    depends_on: mcp_os_control
+    properties:
+      key_pair: { get_param: "OS::stack_name" }
+      network: { get_attr: [mcp_network, network] }
+      security_group: { get_attr: [mcp_network, security_group] }
+      network01_prefix: { get_attr: [mcp_network, network01_prefix] }
+      network02_prefix: { get_attr: [mcp_network, network02_prefix] }
+      network03_prefix: { get_attr: [mcp_network, network03_prefix] }
+      network04_prefix: { get_attr: [mcp_network, network04_prefix] }
+      network05_prefix: { get_attr: [mcp_network, network05_prefix] }
+      instance_name: gtw01
+      instance_domain:
+        list_join:
+        - '.'
+        - [ { get_param: "OS::stack_name" }, { get_param: cluster_domain } ]
+      instance_cluster: { get_param: cluster_name }
+      instance_zone: { get_param: cluster_zone }
+      instance_os: xenial
+      instance_image: ubuntu-16-04-amd64-cloudimg
+      instance_flavor: cfg_salt_small-1
+      instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
+      instance_cloud_init: |
+        # todo
+  mcp_os_compute:
+    type: MCP::StaticCluster5
+    depends_on: mcp_os_gateway
+    properties:
+      key_pair: { get_param: "OS::stack_name" }
+      network: { get_attr: [mcp_network, network] }
+      security_group: { get_attr: [mcp_network, security_group] }
+      network01_prefix: { get_attr: [mcp_network, network01_prefix] }
+      network02_prefix: { get_attr: [mcp_network, network02_prefix] }
+      network03_prefix: { get_attr: [mcp_network, network03_prefix] }
+      network04_prefix: { get_attr: [mcp_network, network04_prefix] }
+      network05_prefix: { get_attr: [mcp_network, network05_prefix] }
+      instance_name: cmp
+      instance_count: { get_param: cluster_node_count }
+      instance_domain:
+        list_join:
+        - '.'
+        - [ { get_param: "OS::stack_name" }, { get_param: cluster_domain } ]
+      instance_cluster: { get_param: cluster_name }
+      instance_zone: { get_param: cluster_zone }
+      instance_os: xenial
+      instance_image: ubuntu-16-04-amd64-cloudimg
+      instance_flavor: os_cmp_small
+      instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
+      instance_cloud_init: |
+        # todo
   mcp_ceph_monitor:
     type: MCP::MultipleInstances
     depends_on: mcp_salt_master
@@ -159,6 +240,7 @@ resources:
       instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
       instance_cloud_init: |
         # todo
+
 
 outputs:
   salt_master_ip:

@@ -21,6 +21,9 @@ parameters:
     type: json
     default: []
 
+  instance_public_net:
+    type: string
+    default: public
   instance_name:
     type: string
   instance_domain:
@@ -48,7 +51,7 @@ parameters:
     default: ""
   volume_size:
     type: number
-    default: 5
+    default: 2
 
 resources:
   instance_port01:
@@ -165,4 +168,5 @@ outputs:
   instance:
     value: { get_resource: instance_instance }
     description: "Instance"
+
 

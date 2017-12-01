@@ -61,7 +61,7 @@ parameters:
     default: ""
   volume_size:
     type: number
-    default: 10
+    default: 2
 
 resources:
   instance_port01:
