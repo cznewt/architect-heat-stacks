@@ -12,7 +12,7 @@ parameters:
     default: nova
   cluster_name:
     type: string
-    default: os-ha-ovs-ceph
+    default: virtual-mcp-ocata-ovs-ceph
   cluster_domain:
     type: string
   cluster_nameservers:
@@ -174,9 +174,34 @@ resources:
       instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
       instance_cloud_init: |
         # todo
+  mcp_os_dashboard:
+    type: MCP::SingleInstance5
+    depends_on: mcp_salt_master
+    properties:
+      key_pair: { get_param: "OS::stack_name" }
+      network: { get_attr: [mcp_network, network] }
+      security_group: { get_attr: [mcp_network, security_group] }
+      network01_prefix: { get_attr: [mcp_network, network01_prefix] }
+      network02_prefix: { get_attr: [mcp_network, network02_prefix] }
+      network03_prefix: { get_attr: [mcp_network, network03_prefix] }
+      network04_prefix: { get_attr: [mcp_network, network04_prefix] }
+      network05_prefix: { get_attr: [mcp_network, network05_prefix] }
+      instance_name: prx01
+      instance_domain:
+        list_join:
+        - '.'
+        - [ { get_param: "OS::stack_name" }, { get_param: cluster_domain } ]
+      instance_cluster: { get_param: cluster_name }
+      instance_zone: { get_param: cluster_zone }
+      instance_os: xenial
+      instance_image: ubuntu-16-04-amd64-cloudimg
+      instance_flavor: m1.medium20
+      instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
+      instance_cloud_init: |
+        # todo
   mcp_os_compute:
     type: MCP::StaticCluster5
-    depends_on: mcp_os_gateway
+    depends_on: mcp_os_control
     properties:
       key_pair: { get_param: "OS::stack_name" }
       network: { get_attr: [mcp_network, network] }
@@ -200,6 +225,38 @@ resources:
       instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
       instance_cloud_init: |
         # todo
+  mcp_sl_monitor:
+    type: MCP::MultipleInstances5
+    depends_on: mcp_os_compute
+    properties:
+      key_pair: { get_param: "OS::stack_name" }
+      network: { get_attr: [mcp_network, network] }
+      security_group: { get_attr: [mcp_network, security_group] }
+      network01_prefix: { get_attr: [mcp_network, network01_prefix] }
+      network02_prefix: { get_attr: [mcp_network, network02_prefix] }
+      network03_prefix: { get_attr: [mcp_network, network03_prefix] }
+      network04_prefix: { get_attr: [mcp_network, network04_prefix] }
+      network05_prefix: { get_attr: [mcp_network, network05_prefix] }
+      network02_vip_address:
+        - ip_address:
+            list_join:
+            - '.'
+            - [ { get_attr: [mcp_network, network02_prefix] }, '253' ]
+      instance01_name: mon01
+      instance02_name: mon02
+      instance03_name: mon03
+      instance_domain:
+        list_join:
+        - '.'
+        - [ { get_param: "OS::stack_name" }, { get_param: cluster_domain } ]
+      instance_cluster: { get_param: cluster_name }
+      instance_zone: { get_param: cluster_zone }
+      instance_os: xenial
+      instance_image: ubuntu-16-04-amd64-cloudimg
+      instance_flavor: stl_mon_medium
+      instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
+      instance_cloud_init: |
+        # todo
   mcp_ceph_monitor:
     type: MCP::MultipleInstances
     depends_on: mcp_salt_master
@@ -220,7 +277,7 @@ resources:
       instance_zone: { get_param: cluster_zone }
       instance_os: xenial
       instance_image: ubuntu-16-04-amd64-cloudimg
-      instance_flavor: m1.large20
+      instance_flavor: m1.large
       instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
       instance_cloud_init: |
         # todo
@@ -243,13 +300,13 @@ resources:
       instance_zone: { get_param: cluster_zone }
       instance_os: xenial
       instance_image: ubuntu-16-04-amd64-cloudimg
-      instance_flavor: m1.large20
+      instance_flavor: m1.large
       instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
       instance_cloud_init: |
         # todo
-
 
 outputs:
   salt_master_ip:
     value: { get_attr: [mcp_salt_master, instance_public_address] }
     description: "Public IP address of the Salt master node"
+
