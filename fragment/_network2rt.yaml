@@ -60,14 +60,15 @@ resources:
         routes_route:
         - routes_route_prefix: { get_param: fip_pool_cidr }
           routes_route_next_hop: { get_param: fip_pool_nh }
-
+          routes_route_next_hop_type: ip-address
+          routes_route_community_attributes:
+            routes_route_community_attributes_community_attribute: []
   network01:
     type: OS::ContrailV2::VirtualNetwork
     properties:
       name: { list_join: ['-', [get_param: stack_name, 'net01']] }
       route_table_refs:
       - get_resource: route_table
-
   subnet01:
     type: OS::Neutron::Subnet
     properties:
