@@ -72,6 +72,9 @@ parameters:
   oc_instace_image:
     type: string
     default: ubuntu-14-04-x64-mcp1.1
+  opencontrail_version:
+    type: string
+    default: oc311
 resources:
   mcp_network:
     type: MCP::NetworkRT
