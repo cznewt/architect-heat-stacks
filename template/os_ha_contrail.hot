@@ -108,6 +108,7 @@ resources:
           template: { get_file: ../script/saltmaster_install.sh }
           params:
             $cluster_name: { get_param: cluster_name }
+            $opencontrail_version: { get_param: opencontrail_version }
             $node_hostname: cfg01
             $node_domain:
               list_join:
