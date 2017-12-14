@@ -76,4 +76,3 @@ do
 done
 
 salt-call saltutil.sync_all
-

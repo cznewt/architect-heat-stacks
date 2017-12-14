@@ -108,7 +108,6 @@ resources:
           template: { get_file: ../script/saltmaster_install.sh }
           params:
             $cluster_name: { get_param: cluster_name }
-            $opencontrail_version: { get_param: opencontrail_version }
             $node_hostname: cfg01
             $node_domain:
               list_join:
@@ -147,8 +146,7 @@ resources:
       instance_image: ubuntu-16-04-amd64-cloudimg
       instance_flavor: os_ha_ctl
       instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
-      instance_cloud_init: |
-        # todo
+      instance_cloud_init: #
   mcp_oc_control:
     type: MCP::MultipleInstances
     depends_on: mcp_os_control
@@ -176,8 +174,12 @@ resources:
       instance_image: { get_param: oc_instace_image }
       instance_flavor: oc_aio_medium
       instance_config_host: { get_attr: [mcp_salt_master, instance_address] }
-      instance_cloud_init: |
-        # todo
+      instance_cloud_init:
+        str_replace:
+          template: |
+            salt-call event.send "reclass/minion/classify" "{'opencontrail_version': '$opencontrail_version' }"
+          params:
+            $opencontrail_version: { get_param: opencontrail_version }
   mcp_os_compute:
     type: MCP::StaticCluster
     depends_on: mcp_oc_control

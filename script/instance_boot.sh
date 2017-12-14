@@ -217,7 +217,6 @@ vars=(
     ["node_domain"]=$node_domain
     ["node_cluster"]=$cluster_name
     ["node_hostname"]=$node_hostname
-    ["opencontrail_version"]=$opencontrail_version
 )
 data=""; i=0
 for key in "${!vars[@]}"; do
