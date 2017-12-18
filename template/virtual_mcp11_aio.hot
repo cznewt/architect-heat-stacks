@@ -25,10 +25,10 @@ parameters:
 
   cfg_reclass_address:
     type: string
-    default: https://gerrit.mcp.mirantis.net/salt-models/mcp-virtual-lab
+    default: https://gerrit.mcp.mirantis.net/salt-models/mcp-virtual-aio
   cfg_reclass_branch:
     type: string
-    default: master
+    default: stable/ocata
   cfg_reclass_key:
     type: string
     hidden: true
