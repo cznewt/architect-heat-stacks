@@ -69,6 +69,9 @@ parameters:
   cfg_bootstrap_extra_repo_params:
     type: string
     default: ''
+  cfg_extra_formulas:
+    type: string
+    default: ""
 
 resources:
   mcp_network:
@@ -121,6 +124,7 @@ resources:
             $reclass_address: { get_param: cfg_reclass_address }
             $reclass_branch: { get_param: cfg_reclass_branch }
             $formula_pkg_revision: { get_param: cfg_formula_pkg_revision }
+            $extra_formulas: { get_param: cfg_extra_formulas }
 
 outputs:
   salt_master_ip:
