@@ -72,6 +72,10 @@ parameters:
     type: string
     default: testing
 
+  cfg_extra_formulas:
+    type: string
+    default: ""
+
 resources:
   mcp_network:
     type: MCP::Network5
