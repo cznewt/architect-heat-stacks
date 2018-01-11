@@ -122,7 +122,7 @@ add_extra_repo_rhel() {
 
 # Set default salt version
 if [ -z "$saltversion" ]; then
-    saltversion="2016.3"
+    saltversion="stable 2016.3"
 fi
 echo "Using Salt version $saltversion"
 
@@ -140,24 +140,13 @@ case "$node_os" in
 
         which wget > /dev/null || (aptget_wrapper update; aptget_wrapper install -y wget)
 
-        # SUGGESTED UPDATE:
-        #export MASTER_IP="$config_host" MINION_ID="$node_hostname.$node_domain" SALT_VERSION=$saltversion
-        #source <(curl -qL ${BOOTSTRAP_SCRIPT_URL})
-        ## Update BOOTSTRAP_SALTSTACK_OPTS, as by default they contain "-dX" not to start service
-        #BOOTSTRAP_SALTSTACK_OPTS=" stable $SALT_VERSION "
-        #install_salt_minion_pkg
-
-        # DEPRECATED:
-        echo "deb [arch=amd64] http://apt-mk.mirantis.com/trusty ${DISTRIB_REVISION} salt extra" > /etc/apt/sources.list.d/mcp_salt.list
-        wget -O - http://apt-mk.mirantis.com/public.gpg | apt-key add - || wait_condition_send "FAILURE" "Failed to add apt-mk key."
-
-        echo "deb http://repo.saltstack.com/apt/ubuntu/14.04/amd64/$saltversion trusty main" > /etc/apt/sources.list.d/saltstack.list
-        wget -O - "https://repo.saltstack.com/apt/ubuntu/14.04/amd64/$saltversion/SALTSTACK-GPG-KEY.pub" | apt-key add - || wait_condition_send "FAILURE" "Failed to add salt apt key."
         add_extra_repo_deb "${BOOTSTRAP_EXTRA_REPO_PARAMS}"
-        aptget_wrapper clean
-        aptget_wrapper update
-        aptget_wrapper install -y salt-common
-        aptget_wrapper install -y salt-minion
+        export MASTER_IP="$config_host" MINION_ID="$node_hostname.$node_domain"
+        source <(curl -qL ${BOOTSTRAP_SCRIPT_URL})
+        BOOTSTRAP_SALTSTACK_VERSION="$saltversion"
+        BOOTSTRAP_SALTSTACK_OPTS="$BOOTSTRAP_SALTSTACK_VERSION"
+        install_salt_minion_pkg
+
         ;;
     xenial)
 
@@ -166,23 +155,13 @@ case "$node_os" in
 
         which wget > /dev/null || (aptget_wrapper update; aptget_wrapper install -y wget)
 
-        # SUGGESTED UPDATE:
-        #export MASTER_IP="$config_host" MINION_ID="$node_hostname.$node_domain" SALT_VERSION=$saltversion
-        #source <(curl -qL ${BOOTSTRAP_SCRIPT_URL})
-        ## Update BOOTSTRAP_SALTSTACK_OPTS, as by default they contain "-dX" not to start service
-        #BOOTSTRAP_SALTSTACK_OPTS=" stable $SALT_VERSION "
-        #install_salt_minion_pkg
-
-        # DEPRECATED:
-        echo "deb [arch=amd64] http://apt-mk.mirantis.com/xenial ${DISTRIB_REVISION} salt extra" > /etc/apt/sources.list.d/mcp_salt.list
-        wget -O - http://apt-mk.mirantis.com/public.gpg | apt-key add - || wait_condition_send "FAILURE" "Failed to add apt-mk key."
-
-        echo "deb http://repo.saltstack.com/apt/ubuntu/16.04/amd64/$saltversion xenial main" > /etc/apt/sources.list.d/saltstack.list
-        wget -O - "https://repo.saltstack.com/apt/ubuntu/16.04/amd64/$saltversion/SALTSTACK-GPG-KEY.pub" | apt-key add - || wait_condition_send "FAILURE" "Failed to add saltstack apt key."
         add_extra_repo_deb "${BOOTSTRAP_EXTRA_REPO_PARAMS}"
-        aptget_wrapper clean
-        aptget_wrapper update
-        aptget_wrapper install -y salt-minion
+        export MASTER_IP="$config_host" MINION_ID="$node_hostname.$node_domain"
+        source <(curl -qL ${BOOTSTRAP_SCRIPT_URL})
+        BOOTSTRAP_SALTSTACK_VERSION="$saltversion"
+        BOOTSTRAP_SALTSTACK_OPTS="$BOOTSTRAP_SALTSTACK_VERSION"
+        install_salt_minion_pkg
+
         ;;
     rhel|centos|centos7|centos7|rhel6|rhel7)
         add_extra_repo_rhel "${BOOTSTRAP_EXTRA_REPO_PARAMS}"
