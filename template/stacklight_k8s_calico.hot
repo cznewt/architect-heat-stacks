@@ -70,6 +70,10 @@ parameters:
     type: string
     default: nightly
 
+  cfg_extra_formulas:
+    type: string
+    default: ""
+
 resources:
   mcp_network:
     type: MCP::Network
@@ -114,6 +118,7 @@ resources:
             $reclass_address: { get_param: cfg_reclass_address }
             $reclass_branch: { get_param: cfg_reclass_branch }
             $formula_pkg_revision: { get_param: cfg_formula_pkg_revision }
+            $extra_formulas: { get_param: cfg_extra_formulas }
   mcp_k8s_control:
     type: MCP::MultipleInstances
     depends_on: mcp_salt_master
