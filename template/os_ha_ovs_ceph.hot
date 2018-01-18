@@ -98,6 +98,7 @@ resources:
       instance_image: ubuntu-16-04-amd64-cloudimg
       instance_flavor: cfg_salt_small-1
       instance_config_host: 127.0.0.1
+      cfg_formula_pkg_revision: { get_param: cfg_formula_pkg_revision }
       instance_cloud_init:
         str_replace:
           template: { get_file: ../script/saltmaster_install.sh }

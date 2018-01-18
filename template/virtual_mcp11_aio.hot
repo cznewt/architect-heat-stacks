@@ -105,6 +105,7 @@ resources:
       instance_flavor: oc_aio_large
       instance_config_host: 127.0.0.1
       cfg_bootstrap_extra_repo_params: { get_param: cfg_bootstrap_extra_repo_params }
+      cfg_formula_pkg_revision: { get_param: cfg_formula_pkg_revision }
       instance_cloud_init:
         str_replace:
           template: { get_file: ../script/saltmaster_install.sh }
