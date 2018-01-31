@@ -102,7 +102,7 @@ resources:
       instance_zone: { get_param: cluster_zone }
       instance_os: xenial
       instance_image: ubuntu-16-04-amd64-cloudimg
-      instance_flavor: oc_aio_large
+      instance_flavor: os_aio_ctl_4
       instance_config_host: 127.0.0.1
       cfg_bootstrap_extra_repo_params: { get_param: cfg_bootstrap_extra_repo_params }
       cfg_formula_pkg_revision: { get_param: cfg_formula_pkg_revision }
