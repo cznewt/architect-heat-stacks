@@ -147,10 +147,12 @@ resources:
             $network03_prefix: { get_param: network03_prefix }
             $network04_prefix: { get_param: network04_prefix }
             $network05_prefix: { get_param: network05_prefix }
+            $floating_ip: { get_attr: [ floating_ip, floating_ip_address ] }
             $instance_cloud_init: { get_param: instance_cloud_init }
             $wait_condition_notify: { get_attr: [ instance_wait_handle, curl_cli ] }
             $bootstrap_extra_repo_params: { get_param: cfg_bootstrap_extra_repo_params }
             $formula_pkg_revision: { get_param: cfg_formula_pkg_revision }
+            $floating_ip: { get_attr: [ floating_ip, ip ] }
   floating_ip:
     type: OS::Nova::FloatingIP
     properties:

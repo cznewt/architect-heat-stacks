@@ -22,6 +22,8 @@ export DISTRIB_REVISION=${DISTRIB_REVISION:-nightly}
 # Format: repo 1, repo priority 1, repo pin 1; repo 2, repo priority 2, repo pin 2;
 export BOOTSTRAP_EXTRA_REPO_PARAMS="$bootstrap_extra_repo_params"
 
+export PUBLIC_IP=$floating_ip
+
 echo "Environment variables:"
 env
 
@@ -168,7 +170,6 @@ case "$node_os" in
         yum install -y git
         export MASTER_IP="$config_host" MINION_ID="$node_hostname.$node_domain" SALT_VERSION=$saltversion
         source <(curl -qL ${BOOTSTRAP_SCRIPT_URL})
-        # Update BOOTSTRAP_SALTSTACK_OPTS, as by default they contain "-dX" not to start service
         BOOTSTRAP_SALTSTACK_OPTS=" stable $SALT_VERSION "
         install_salt_minion_pkg
         ;;
@@ -195,11 +196,11 @@ sleep 1
 
 echo "Classifying node ..."
 os_codename=$(salt-call grains.item oscodename --out key | awk '/oscodename/ {print $2}')
-node_network01_ip="$(ip a | awk -v prefix="^    inet $network01_prefix[.]" '$0 ~ prefix {split($2, a, "/"); print a[1]}')"
-node_network02_ip="$(ip a | awk -v prefix="^    inet $network02_prefix[.]" '$0 ~ prefix {split($2, a, "/"); print a[1]}')"
-node_network03_ip="$(ip a | awk -v prefix="^    inet $network03_prefix[.]" '$0 ~ prefix {split($2, a, "/"); print a[1]}')"
-node_network04_ip="$(ip a | awk -v prefix="^    inet $network04_prefix[.]" '$0 ~ prefix {split($2, a, "/"); print a[1]}')"
-node_network05_ip="$(ip a | awk -v prefix="^    inet $network05_prefix[.]" '$0 ~ prefix {split($2, a, "/"); print a[1]}')"
+node_network01_ip="$(ip a | awk -v prefix="^    inet $network01_prefix[.]" '$0 ~ prefix {split($2, a, "/"); print a[1]}'|head -n 1)"
+node_network02_ip="$(ip a | awk -v prefix="^    inet $network02_prefix[.]" '$0 ~ prefix {split($2, a, "/"); print a[1]}'|head -n 1)"
+node_network03_ip="$(ip a | awk -v prefix="^    inet $network03_prefix[.]" '$0 ~ prefix {split($2, a, "/"); print a[1]}'|head -n 1)"
+node_network04_ip="$(ip a | awk -v prefix="^    inet $network04_prefix[.]" '$0 ~ prefix {split($2, a, "/"); print a[1]}'|head -n 1)"
+node_network05_ip="$(ip a | awk -v prefix="^    inet $network05_prefix[.]" '$0 ~ prefix {split($2, a, "/"); print a[1]}'|head -n 1)"
 
 node_network01_iface="$(ip a | awk -v prefix="^    inet $network01_prefix[.]" '$0 ~ prefix {split($7, a, "/"); print a[1]}')"
 node_network02_iface="$(ip a | awk -v prefix="^    inet $network02_prefix[.]" '$0 ~ prefix {split($7, a, "/"); print a[1]}')"
@@ -247,12 +248,21 @@ for key in "${!vars[@]}"; do
         data+=", "
     fi
 done
-salt-call event.send "reclass/minion/classify" "{$data ${more_params}}"
+salt-call event.send "architect/minion/classify" "{$data ${more_params}}"
 
-sleep 5
+sleep 15
 
 salt-call saltutil.sync_all
 salt-call mine.flush
 salt-call mine.update
+
+echo "Applying Salt minion states ..."
+run_master_states=("linux" "openssh" "salt.minion")
+for state in "${run_master_states[@]}"
+do
+  salt-call --no-color state.apply "$state" -l info || wait_condition_send "FAILURE" "Salt state $state run failed."
+done
+
+salt-call architect.node_info
 
 wait_condition_send "SUCCESS" "Instance successfuly started."

@@ -99,7 +99,7 @@ resources:
             $config_host: { get_param: instance_config_host }
             $network01_prefix: { get_param: network01_prefix }
             $network02_prefix: { get_param: network02_prefix }
-
+            $floating_ip: { get_attr: [ floating_ip, ip ] }
             $instance_cloud_init: { get_param: instance_cloud_init }
             $wait_condition_notify: { get_attr: [ instance_wait_handle, curl_cli ] }
   floating_ip:
